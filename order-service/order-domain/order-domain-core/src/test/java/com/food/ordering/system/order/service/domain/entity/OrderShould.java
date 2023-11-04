@@ -233,4 +233,28 @@ class OrderShould {
 
 		Assertions.assertEquals(APPROVED, order.getOrderStatus());
 	}
+
+	@Test
+	void throwException_onInitCancel_withOrderStatusNotPaid() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PENDING)
+		);
+
+		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::initCancel);
+
+		Assertions.assertEquals("Order is not in correct state for initCancel operation!", exception.getMessage());
+	}
+
+	@Test
+	void updateOrderStatusSuccessfully_onInitCancel_withOrderStatusPaid() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PAID)
+		);
+
+		order.initCancel();
+
+		Assertions.assertEquals(CANCELLING, order.getOrderStatus());
+	}
 }

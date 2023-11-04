@@ -50,6 +50,14 @@ public class Order extends AggregateRoot<OrderId> {
         orderStatus = OrderStatus.APPROVED;
     }
 
+    public void initCancel() {
+        if (orderStatus != OrderStatus.PAID) {
+            throw new OrderDomainException("Order is not in correct state for initCancel operation!");
+        }
+
+        orderStatus = OrderStatus.CANCELLING;
+    }
+
     private void initializeOrderItems() {
         long itemId = 1;
         for (OrderItem orderItem: items){
