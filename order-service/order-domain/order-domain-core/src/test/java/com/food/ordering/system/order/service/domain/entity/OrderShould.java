@@ -15,6 +15,8 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
+import static com.food.ordering.system.domain.entity.valueobject.OrderStatus.PAID;
+import static com.food.ordering.system.domain.entity.valueobject.OrderStatus.PENDING;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -39,7 +41,7 @@ class OrderShould {
 	}
 
 	@Test
-	void initializeOrder() {
+	void setInitialState_onInitializeOrder() {
 
 		Order order = new Order(
 			Order.Builder.builder()
@@ -53,7 +55,7 @@ class OrderShould {
 
 		Assertions.assertEquals(order.getId().getValue().toString(), "e246a687-661d-408c-9a70-72370bc439b8");
 		Assertions.assertEquals(order.getTrackingId().getValue().toString(), "662768d4-5f94-4833-b524-55edf721e9b8");
-		Assertions.assertEquals(order.getOrderStatus(), OrderStatus.PENDING);
+		Assertions.assertEquals(order.getOrderStatus(), PENDING);
 		Assertions.assertEquals(order.getItems().get(0).getId().getValue(), 1);
 		Assertions.assertEquals(order.getItems().get(1).getId().getValue(), 2);
 	}
@@ -74,7 +76,7 @@ class OrderShould {
 	void throwException_onValidateOrderValidateInitialOrder_withOrderStatus() {
 		Order order = new Order(
 			Order.Builder.builder()
-				.orderStatus(OrderStatus.PAID)
+				.orderStatus(PAID)
 		);
 
 		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::validateOrder);
@@ -183,5 +185,29 @@ class OrderShould {
 		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::validateOrder);
 		Assertions.assertEquals("Order item price: 5 is not valid for product e246a687-661d-408c-9a70-72370bc439b8",
 			exception.getMessage());
+	}
+
+	@Test
+	void throwException_onPay_withOrderStatusNotPending() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(OrderStatus.CANCELLED)
+		);
+
+		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::pay);
+
+		Assertions.assertEquals("Order is not in correct state for pay operation!", exception.getMessage());
+	}
+
+	@Test
+	void updateOrderStatusSuccessfully_onPay_withOrderStatusPending() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PENDING)
+		);
+
+		order.pay();
+
+		Assertions.assertEquals(PAID, order.getOrderStatus());
 	}
 }

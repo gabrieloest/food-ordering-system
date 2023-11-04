@@ -34,6 +34,14 @@ public class Order extends AggregateRoot<OrderId> {
         validateItemsPrice();
     }
 
+    public void pay() {
+        if (orderStatus != OrderStatus.PENDING) {
+            throw new OrderDomainException("Order is not in correct state for pay operation!");
+        }
+
+        orderStatus = OrderStatus.PAID;
+    }
+
     private void initializeOrderItems() {
         long itemId = 1;
         for (OrderItem orderItem: items){
