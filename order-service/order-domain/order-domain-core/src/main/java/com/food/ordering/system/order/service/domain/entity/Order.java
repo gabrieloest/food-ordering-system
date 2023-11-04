@@ -58,6 +58,14 @@ public class Order extends AggregateRoot<OrderId> {
         orderStatus = OrderStatus.CANCELLING;
     }
 
+    public void cancel() {
+        if (!(orderStatus == OrderStatus.CANCELLING || orderStatus == OrderStatus.PENDING)) {
+            throw new OrderDomainException("Order is not in correct state for cancel operation!");
+        }
+
+        orderStatus = OrderStatus.CANCELLED;
+    }
+
     private void initializeOrderItems() {
         long itemId = 1;
         for (OrderItem orderItem: items){

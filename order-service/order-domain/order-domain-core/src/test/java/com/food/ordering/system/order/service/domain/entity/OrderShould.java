@@ -257,4 +257,40 @@ class OrderShould {
 
 		Assertions.assertEquals(CANCELLING, order.getOrderStatus());
 	}
+
+	@Test
+	void throwException_onCancel_withOrderStatusNotPendingOrCancelling() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PAID)
+		);
+
+		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::cancel);
+
+		Assertions.assertEquals("Order is not in correct state for cancel operation!", exception.getMessage());
+	}
+
+	@Test
+	void updateOrderStatusSuccessfully_onCancel_withOrderStatusPending() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PENDING)
+		);
+
+		order.cancel();
+
+		Assertions.assertEquals(CANCELLED, order.getOrderStatus());
+	}
+
+	@Test
+	void updateOrderStatusSuccessfully_onCancel_withOrderStatusCancelling() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(CANCELLING)
+		);
+
+		order.cancel();
+
+		Assertions.assertEquals(CANCELLED, order.getOrderStatus());
+	}
 }
