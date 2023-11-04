@@ -241,7 +241,7 @@ class OrderShould {
 				.orderStatus(PENDING)
 		);
 
-		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::initCancel);
+		Exception exception = Assertions.assertThrows(OrderDomainException.class, () -> order.initCancel(List.of()));
 
 		Assertions.assertEquals("Order is not in correct state for initCancel operation!", exception.getMessage());
 	}
@@ -253,9 +253,21 @@ class OrderShould {
 				.orderStatus(PAID)
 		);
 
-		order.initCancel();
+		order.initCancel(List.of());
 
 		Assertions.assertEquals(CANCELLING, order.getOrderStatus());
+	}
+
+	@Test
+	void updateFailureMessages_onInitCancel_withFailureMessagesPassed() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PAID)
+		);
+
+		order.initCancel(List.of("FAILURE_MESSAGE"));
+
+		Assertions.assertTrue(order.getFailureMessages().contains("FAILURE_MESSAGE"));
 	}
 
 	@Test
@@ -265,7 +277,7 @@ class OrderShould {
 				.orderStatus(PAID)
 		);
 
-		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::cancel);
+		Exception exception = Assertions.assertThrows(OrderDomainException.class, () -> order.cancel(List.of()));
 
 		Assertions.assertEquals("Order is not in correct state for cancel operation!", exception.getMessage());
 	}
@@ -277,7 +289,7 @@ class OrderShould {
 				.orderStatus(PENDING)
 		);
 
-		order.cancel();
+		order.cancel(List.of());
 
 		Assertions.assertEquals(CANCELLED, order.getOrderStatus());
 	}
@@ -289,8 +301,20 @@ class OrderShould {
 				.orderStatus(CANCELLING)
 		);
 
-		order.cancel();
+		order.cancel(List.of());
 
 		Assertions.assertEquals(CANCELLED, order.getOrderStatus());
+	}
+
+	@Test
+	void updateFailureMessages_onCancel_withFailureMessagesPassed() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(CANCELLING)
+		);
+
+		order.cancel(List.of("FAILURE_MESSAGE"));
+
+		Assertions.assertTrue(order.getFailureMessages().contains("FAILURE_MESSAGE"));
 	}
 }
