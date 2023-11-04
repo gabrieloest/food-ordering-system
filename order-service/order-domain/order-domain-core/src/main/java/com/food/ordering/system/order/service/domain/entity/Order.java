@@ -42,6 +42,14 @@ public class Order extends AggregateRoot<OrderId> {
         orderStatus = OrderStatus.PAID;
     }
 
+    public void approve() {
+        if (orderStatus != OrderStatus.PAID) {
+            throw new OrderDomainException("Order is not in correct state for approve operation!");
+        }
+
+        orderStatus = OrderStatus.APPROVED;
+    }
+
     private void initializeOrderItems() {
         long itemId = 1;
         for (OrderItem orderItem: items){

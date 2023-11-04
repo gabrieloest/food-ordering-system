@@ -15,8 +15,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
-import static com.food.ordering.system.domain.entity.valueobject.OrderStatus.PAID;
-import static com.food.ordering.system.domain.entity.valueobject.OrderStatus.PENDING;
+import static com.food.ordering.system.domain.entity.valueobject.OrderStatus.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -209,5 +208,29 @@ class OrderShould {
 		order.pay();
 
 		Assertions.assertEquals(PAID, order.getOrderStatus());
+	}
+
+	@Test
+	void throwException_onApprove_withOrderStatusNotPaid() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PENDING)
+		);
+
+		Exception exception = Assertions.assertThrows(OrderDomainException.class, order::approve);
+
+		Assertions.assertEquals("Order is not in correct state for approve operation!", exception.getMessage());
+	}
+
+	@Test
+	void updateOrderStatusSuccessfully_onApprove_withOrderStatusPaid() {
+		Order order = new Order(
+			Order.Builder.builder()
+				.orderStatus(PAID)
+		);
+
+		order.approve();
+
+		Assertions.assertEquals(APPROVED, order.getOrderStatus());
 	}
 }
