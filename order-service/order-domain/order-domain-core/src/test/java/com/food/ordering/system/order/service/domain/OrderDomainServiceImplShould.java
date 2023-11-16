@@ -5,6 +5,7 @@ import com.food.ordering.system.order.service.domain.entity.Order;
 import com.food.ordering.system.order.service.domain.entity.OrderItem;
 import com.food.ordering.system.order.service.domain.entity.Product;
 import com.food.ordering.system.order.service.domain.entity.Restaurant;
+import com.food.ordering.system.order.service.domain.event.OrderCanceleldEvent;
 import com.food.ordering.system.order.service.domain.event.OrderCreatedEvent;
 import com.food.ordering.system.order.service.domain.event.OrderPaidEvent;
 import com.food.ordering.system.order.service.domain.exception.OrderDomainException;
@@ -154,6 +155,40 @@ class OrderDomainServiceImplShould {
 
 		assertDoesNotThrow(() -> {
 			orderDomainService.approveOrder(order);
+		});
+	}
+
+	@Test
+	void createOrderCanceledEvent_onCancelOrderPaymentOrder_whenInformationValid() {
+		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
+
+		Order order = givenAValidOrderInPaidState(product1Id);
+
+		OrderCanceleldEvent orderCanceleldEvent = orderDomainService.cancelOrderPayment(order, List.of());
+
+		Assertions.assertEquals(new OrderId(UUID.fromString("662768d4-5f94-4833-b524-55edf721e9b8")), orderCanceleldEvent.getOrder().getId());
+		Assertions.assertEquals("2023-01-01T10:00Z", orderCanceleldEvent.getCreatedAt().toString());
+	}
+
+	@Test
+	void setOrderStatusToCancelling_onCancelOrderPaymentOrder_whenInformationValid() {
+		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
+
+		Order order = givenAValidOrderInPaidState(product1Id);
+
+		orderDomainService.cancelOrderPayment(order, List.of());
+
+		Assertions.assertEquals(OrderStatus.CANCELLING, order.getOrderStatus());
+	}
+
+	@Test
+	void assertSuccess_onCancelOrderPaymentOrder_whenInformationValid() {
+		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
+
+		Order order = givenAValidOrderInPaidState(product1Id);
+
+		assertDoesNotThrow(() -> {
+			orderDomainService.cancelOrderPayment(order, List.of());
 		});
 	}
 
