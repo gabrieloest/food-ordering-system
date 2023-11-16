@@ -116,7 +116,7 @@ public class Order extends AggregateRoot<OrderId> {
         }
     }
 
-    Order(Builder builder) {
+    public Order(Builder builder) {
         super.setId(builder.orderId);
         customerId = builder.customerId;
         restaurantId = builder.restaurantId;

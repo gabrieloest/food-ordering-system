@@ -23,7 +23,7 @@ public class OrderItem extends BaseEntity<OrderItemId> {
                 && price.multiply(quantity).equals(subTotal);
     }
 
-    OrderItem(Builder builder) {
+    public OrderItem(Builder builder) {
         super.setId(builder.orderItemId);
         product = builder.product;
         quantity = builder.quantity;
