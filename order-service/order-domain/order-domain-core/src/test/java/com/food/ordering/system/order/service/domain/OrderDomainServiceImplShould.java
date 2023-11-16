@@ -147,6 +147,17 @@ class OrderDomainServiceImplShould {
 	}
 
 	@Test
+	void assertSuccess_onApproveOrder_whenInformationValid() {
+		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
+
+		Order order = givenAValidOrderInPaidState(product1Id);
+
+		assertDoesNotThrow(() -> {
+			orderDomainService.approveOrder(order);
+		});
+	}
+
+	@Test
 	void approveOrder() {
 	}
 
@@ -178,6 +189,24 @@ class OrderDomainServiceImplShould {
 		Order order = new Order(Order.Builder.builder()
 			.orderId(new OrderId(UUID.fromString("662768d4-5f94-4833-b524-55edf721e9b8")))
 			.orderStatus(OrderStatus.PENDING)
+			.items(List.of(new OrderItem(
+				OrderItem.Builder.builder()
+					.product(
+						new Product(new ProductId(product1Id), null, null)
+					)
+					.quantity(1)
+					.price(new Money(new BigDecimal("10.00")))
+					.subTotal(new Money(new BigDecimal("10.00")))
+			)))
+			.price(new Money(new BigDecimal("10.00")))
+		);
+		return order;
+	}
+
+	private static Order givenAValidOrderInPaidState(UUID product1Id) {
+		Order order = new Order(Order.Builder.builder()
+			.orderId(new OrderId(UUID.fromString("662768d4-5f94-4833-b524-55edf721e9b8")))
+			.orderStatus(OrderStatus.PAID)
 			.items(List.of(new OrderItem(
 				OrderItem.Builder.builder()
 					.product(
