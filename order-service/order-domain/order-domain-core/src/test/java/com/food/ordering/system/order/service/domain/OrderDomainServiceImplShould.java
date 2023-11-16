@@ -1,13 +1,12 @@
 package com.food.ordering.system.order.service.domain;
 
-import com.food.ordering.system.domain.entity.valueobject.Money;
-import com.food.ordering.system.domain.entity.valueobject.ProductId;
-import com.food.ordering.system.domain.entity.valueobject.RestaurantId;
+import com.food.ordering.system.domain.entity.valueobject.*;
 import com.food.ordering.system.order.service.domain.entity.Order;
 import com.food.ordering.system.order.service.domain.entity.OrderItem;
 import com.food.ordering.system.order.service.domain.entity.Product;
 import com.food.ordering.system.order.service.domain.entity.Restaurant;
 import com.food.ordering.system.order.service.domain.event.OrderCreatedEvent;
+import com.food.ordering.system.order.service.domain.event.OrderPaidEvent;
 import com.food.ordering.system.order.service.domain.exception.OrderDomainException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -22,8 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.*;
 
 class OrderDomainServiceImplShould {
 
@@ -39,7 +37,9 @@ class OrderDomainServiceImplShould {
 		given(UUID.randomUUID()).willReturn(uuid);
 		given(uuid.toString()).willReturn(
 			"e246a687-661d-408c-9a70-72370bc439b8",
-			"662768d4-5f94-4833-b524-55edf721e9b8"
+			"662768d4-5f94-4833-b524-55edf721e9b8",
+			"1ea675bf-331c-43ea-bfe3-02d1073d6716",
+			"a61c28d8-9fa2-4084-b42a-59565ce36d74"
 		);
 
 		String instantExpected = "2023-01-01T10:00:00Z";
@@ -55,6 +55,7 @@ class OrderDomainServiceImplShould {
 
 	@AfterEach
 	void tearDown() {
+		clearAllCaches();
 	}
 
 	@Test
@@ -62,7 +63,7 @@ class OrderDomainServiceImplShould {
 		Order order = new Order(Order.Builder.builder());
 		Restaurant restaurant = new Restaurant(Restaurant.Builder.builder()
 			.active(false)
-			.restaurantId(new RestaurantId(UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8"))));
+			.restaurantId(new RestaurantId(uuid)));
 
 		Exception exception = Assertions.assertThrows(OrderDomainException.class,
 			() -> orderDomainService.validateAndInitiateOrder(order, restaurant));
@@ -74,7 +75,7 @@ class OrderDomainServiceImplShould {
 	void createOrderCreatedEvent_onValidateAndInitiateOrder_whenInformationValid() {
 		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
 
-		Order order = givenAValidOrder(product1Id);
+		Order order = givenAValidOrderInInitialState(product1Id);
 
 		Restaurant restaurant = givenAValidRestaurant(product1Id);
 
@@ -88,7 +89,7 @@ class OrderDomainServiceImplShould {
 	void setOrderProductInformation_onValidateAndInitiateOrder_whenInformationValid() {
 		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
 
-		Order order = givenAValidOrder(product1Id);
+		Order order = givenAValidOrderInInitialState(product1Id);
 
 		Restaurant restaurant = givenAValidRestaurant(product1Id);
 
@@ -102,7 +103,7 @@ class OrderDomainServiceImplShould {
 	void assertSuccess_onValidateAndInitiateOrder_whenInformationValid() {
 		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
 
-		Order order = givenAValidOrder(product1Id);
+		Order order = givenAValidOrderInInitialState(product1Id);
 
 		Restaurant restaurant = givenAValidRestaurant(product1Id);
 
@@ -112,7 +113,37 @@ class OrderDomainServiceImplShould {
 	}
 
 	@Test
-	void payOrder() {
+	void createOrderPaidEvent_onPayOrder_whenInformationValid() {
+		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
+
+		Order order = givenAValidOrderInPendingState(product1Id);
+
+		OrderPaidEvent orderPaidEvent = orderDomainService.payOrder(order);
+
+		Assertions.assertEquals(new OrderId(UUID.fromString("662768d4-5f94-4833-b524-55edf721e9b8")), orderPaidEvent.getOrder().getId());
+		Assertions.assertEquals("2023-01-01T10:00Z", orderPaidEvent.getCreatedAt().toString());
+	}
+
+	@Test
+	void setOrderStatusToPaid_onPayOrder_whenInformationValid() {
+		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
+
+		Order order = givenAValidOrderInPendingState(product1Id);
+
+		orderDomainService.payOrder(order);
+
+		Assertions.assertEquals(OrderStatus.PAID, order.getOrderStatus());
+	}
+
+	@Test
+	void assertSuccess_onPayOrder_whenInformationValid() {
+		UUID product1Id = UUID.fromString("e246a687-661d-408c-9a70-72370bc439b8");
+
+		Order order = givenAValidOrderInPendingState(product1Id);
+
+		assertDoesNotThrow(() -> {
+			orderDomainService.payOrder(order);
+		});
 	}
 
 	@Test
@@ -127,8 +158,26 @@ class OrderDomainServiceImplShould {
 	void cancelOrder() {
 	}
 
-	private static Order givenAValidOrder(UUID product1Id) {
+	private static Order givenAValidOrderInInitialState(UUID product1Id) {
 		Order order = new Order(Order.Builder.builder()
+			.items(List.of(new OrderItem(
+				OrderItem.Builder.builder()
+					.product(
+						new Product(new ProductId(product1Id), null, null)
+					)
+					.quantity(1)
+					.price(new Money(new BigDecimal("10.00")))
+					.subTotal(new Money(new BigDecimal("10.00")))
+			)))
+			.price(new Money(new BigDecimal("10.00")))
+		);
+		return order;
+	}
+
+	private static Order givenAValidOrderInPendingState(UUID product1Id) {
+		Order order = new Order(Order.Builder.builder()
+			.orderId(new OrderId(UUID.fromString("662768d4-5f94-4833-b524-55edf721e9b8")))
+			.orderStatus(OrderStatus.PENDING)
 			.items(List.of(new OrderItem(
 				OrderItem.Builder.builder()
 					.product(
