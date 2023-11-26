@@ -2,8 +2,8 @@ package com.food.ordering.system.kafka.producer;
 
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.food.ordering.system.kafka.config.data.KafkaConfigData;
-import org.food.ordering.system.kafka.config.data.KafkaProducerConfigData;
+import com.food.ordering.system.kafka.config.data.KafkaConfigData;
+import com.food.ordering.system.kafka.config.data.KafkaProducerConfigData;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
